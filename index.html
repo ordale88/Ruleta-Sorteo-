@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ruleta de Sorteo</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            background: #f2f2f2;
+        }
+        #canvas {
+            margin-top: 40px;
+        }
+        #spinButton {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎉 ¡Gira la Ruleta del Sorteo! 🎉</h1>
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <br>
+    <button id="spinButton">Girar</button>
+
+    <script>
+        const names = ["Helen", "Nicol", "Estephany"];
+        let forcedWins = 2;  // Helen gana las dos primeras veces
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const radius = canvas.width / 2;
+        const spinButton = document.getElementById("spinButton");
+        let angleOffset = 0;
+        let spinning = false;
+
+        function drawWheel() {
+            const angleStep = (2 * Math.PI) / names.length;
+            for (let i = 0; i < names.length; i++) {
+                const angleStart = angleOffset + i * angleStep;
+                const angleEnd = angleStart + angleStep;
+
+                ctx.beginPath();
+                ctx.moveTo(radius, radius);
+                ctx.arc(radius, radius, radius, angleStart, angleEnd);
+                ctx.fillStyle = i % 2 === 0 ? "#FFCC00" : "#FF6666";
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(radius, radius);
+                ctx.rotate(angleStart + angleStep / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#000";
+                ctx.font = "20px Arial";
+                ctx.fillText(names[i], radius - 10, 10);
+                ctx.restore();
+            }
+        }
+
+        function spinWheel() {
+            if (spinning) return;
+            spinning = true;
+
+            let winnerIndex;
+            if (forcedWins > 0) {
+                winnerIndex = names.indexOf("Helen");
+                forcedWins--;
+            } else {
+                winnerIndex = Math.floor(Math.random() * names.length);
+            }
+
+            const angleStep = (2 * Math.PI) / names.length;
+            const finalAngle = (3 * 2 * Math.PI) + (Math.PI / 2 - (winnerIndex + 0.5) * angleStep);
+            const duration = 3000;
+            const start = performance.now();
+
+            function animate(time) {
+                const progress = Math.min((time - start) / duration, 1);
+                angleOffset = finalAngle * ( (--progress)*progress*progress + 1 );
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawWheel();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    spinning = false;
+                    alert("🎉 Ganadora: " + names[winnerIndex] + " 🎉");
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        drawWheel();
+        spinButton.addEventListener("click", spinWheel);
+    </script>
+</body>
+</html>
